@@ -11,6 +11,8 @@ using TournamentAPI.Core.Repositories;
 using TournamentAPI.Data.Repositories;
 using AutoMapper;
 using TournamentAPI.Core.Dto;
+using Azure;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace TournamentAPI.Api.Controllers
 {
@@ -114,6 +116,7 @@ namespace TournamentAPI.Api.Controllers
             }
 
             var tournament = _mapper.Map<Tournament>(tournamentDto);
+
             try
             {
                 _unitOfWork.TournamentRepository.Add(tournament);
@@ -155,6 +158,54 @@ namespace TournamentAPI.Api.Controllers
             catch (Exception)
             {
                 return StatusCode(500, "An error occurred while deleting the tournament.");
+            }
+
+            return NoContent();
+        }
+
+        [HttpPatch("tournamentId")]
+        public async Task<ActionResult<TournamentDto>> PatchTournament(int tournamentId, JsonPatchDocument<TournamentDto> patchDocument)
+        {
+            if (tournamentId <= 0)
+            {
+                return BadRequest();
+            }
+
+            if (patchDocument == null)
+            {
+                return BadRequest();
+            }
+
+
+            var tournament = await _unitOfWork.TournamentRepository.GetAsync(tournamentId);
+            if (tournament == null)
+            {
+                return NotFound();
+            }
+
+            var tournamentToPatch = _mapper.Map<TournamentDto>(tournament);
+            patchDocument.ApplyTo(tournamentToPatch, ModelState);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (!TryValidateModel(tournament))
+            {
+                return BadRequest(ModelState);
+            }
+
+            _mapper.Map(tournamentToPatch, tournament);
+            
+            try
+            {
+                await _unitOfWork.CompleteAsync();
+            }
+
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while updating the tournament.");
             }
 
             return NoContent();
