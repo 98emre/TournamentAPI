@@ -25,7 +25,17 @@ namespace TournamentAPI.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Tournament>>> GetTournament()
         {
-            return await _context.Tournament.ToListAsync();
+            var tournaments = await _context
+                .Tournament
+                .ToListAsync();
+
+            if (tournaments == null || tournaments.Count() == 0)
+            {
+                return NotFound();
+            }
+
+
+            return tournaments;
         }
 
         // GET: api/Tournaments/5
@@ -47,17 +57,23 @@ namespace TournamentAPI.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTournament(int id, Tournament tournament)
         {
-            if (id != tournament.Id)
+
+            var existTournament = await _context.Tournament.Include(t => t.Games).FirstOrDefaultAsync(t => t.Id == id);
+
+            if (existTournament == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(tournament).State = EntityState.Modified;
+            existTournament.Title = tournament.Title;
+            existTournament.StartDate = tournament.StartDate;
+            existTournament.Games = tournament.Games;
 
             try
             {
                 await _context.SaveChangesAsync();
             }
+            
             catch (DbUpdateConcurrencyException)
             {
                 if (!TournamentExists(id))
@@ -89,6 +105,7 @@ namespace TournamentAPI.Api.Controllers
         public async Task<IActionResult> DeleteTournament(int id)
         {
             var tournament = await _context.Tournament.FindAsync(id);
+
             if (tournament == null)
             {
                 return NotFound();

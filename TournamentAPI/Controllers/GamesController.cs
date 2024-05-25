@@ -47,12 +47,17 @@ namespace TournamentAPI.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutGame(int id, Game game)
         {
-            if (id != game.Id)
+            var existGame = await _context.Game.FirstOrDefaultAsync(t => t.Id == id);
+
+            if (existGame == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(game).State = EntityState.Modified;
+
+            existGame.Title = game.Title;
+            existGame.Time = game.Time;
+            existGame.TournamentId = game.TournamentId;
 
             try
             {

@@ -20,6 +20,6 @@ namespace TournamentAPI.Core.Entities
         [ForeignKey("TournamentId")]
         public int TournamentId { get; set; }
 
-        public Tournament Tournament { get; set; } = default!;
+        public Tournament? Tournament { get; set; }
     }
 }
