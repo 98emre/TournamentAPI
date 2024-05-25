@@ -133,7 +133,6 @@ namespace TournamentAPI.Api.Controllers
             return CreatedAtAction("GetTournament", new { id = returnTournament.Id }, returnTournament);
         }
 
-        // DELETE: api/Tournaments/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTournament(int id)
         {
@@ -163,7 +162,7 @@ namespace TournamentAPI.Api.Controllers
             return NoContent();
         }
 
-        [HttpPatch("tournamentId")]
+        [HttpPatch("{tournamentId}")]
         public async Task<ActionResult<TournamentDto>> PatchTournament(int tournamentId, JsonPatchDocument<TournamentDto> patchDocument)
         {
             if (tournamentId <= 0)
@@ -205,7 +204,7 @@ namespace TournamentAPI.Api.Controllers
 
             catch (Exception)
             {
-                return StatusCode(500, "An error occurred while updating the tournament.");
+                return StatusCode(500, "An error occurred while patching the tournament.");
             }
 
             return NoContent();

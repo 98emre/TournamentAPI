@@ -10,6 +10,8 @@ using TournamentAPI.Core.Entities;
 using TournamentAPI.Core.Repositories;
 using AutoMapper;
 using TournamentAPI.Core.Dto;
+using Azure;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace TournamentAPI.Api.Controllers
 {
@@ -59,8 +61,6 @@ namespace TournamentAPI.Api.Controllers
             return Ok(_mapper.Map<GameDto>(game));
         }
 
-        // PUT: api/Games/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutGame(int id, GameDto gameDto)
         {
@@ -113,8 +113,6 @@ namespace TournamentAPI.Api.Controllers
             return NoContent();
         }
 
-        // POST: api/Games
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<GameDto>> PostGame(GameDto gameDto)
         {
@@ -146,7 +144,6 @@ namespace TournamentAPI.Api.Controllers
             return CreatedAtAction("GetGame", new { id = returnGame.Id }, returnGame);
         }
 
-        // DELETE: api/Games/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGame(int id)
         {
@@ -172,6 +169,54 @@ namespace TournamentAPI.Api.Controllers
             {
                 return StatusCode(500, "An error occurred while deleting the game.");
 
+            }
+
+            return NoContent();
+        }
+
+        [HttpPatch("{gameId}")]
+        public async Task<IActionResult> PatchGame(int gameId, JsonPatchDocument<GameDto> patchDocument)
+        {
+            if(gameId <= 0)
+            {
+                return BadRequest();
+            }
+
+            if (patchDocument == null)
+            {
+                return BadRequest();
+            }
+
+            var game = await _unitOfWork.GameRepository.GetAsync(gameId);
+
+            if(game == null)
+            {
+                return NotFound();
+            }
+
+            var gameToPatch = _mapper.Map<GameDto>(game);
+            patchDocument.ApplyTo(gameToPatch);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (!TryValidateModel(game))
+            {
+                return BadRequest(ModelState);
+            }
+
+            _mapper.Map(gameToPatch, game);
+
+            try
+            {
+                await _unitOfWork.CompleteAsync();
+            }
+
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while patch the game.");
             }
 
             return NoContent();
