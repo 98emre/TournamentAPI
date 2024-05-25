@@ -15,6 +15,8 @@ namespace TournamentAPI.Data.Data
         {
             CreateMap<Tournament, TournamentDto>();
             CreateMap<Game, GameDto>();
+            CreateMap<TournamentDto, Tournament>();
+            CreateMap<GameDto, Game>();
         }
     }
 }
