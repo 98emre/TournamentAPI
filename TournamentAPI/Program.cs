@@ -36,7 +36,7 @@ namespace TournamentAPI
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                await app.SeedDataAsync();
+                //await app.SeedDataAsync();
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }

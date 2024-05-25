@@ -10,7 +10,7 @@ using TournamentAPI.Core.Entities;
 
 namespace TournamentAPI.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/games")]
     [ApiController]
     public class GamesController : ControllerBase
     {
