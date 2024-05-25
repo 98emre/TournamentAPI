@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using TournamentAPI.Data.Data;
 using TournamentAPI.Core.Entities;
 using TournamentAPI.Core.Repositories;
+using AutoMapper;
+using TournamentAPI.Core.Dto;
 
 namespace TournamentAPI.Api.Controllers
 {
@@ -16,15 +18,17 @@ namespace TournamentAPI.Api.Controllers
     public class GamesController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public GamesController(IUnitOfWork unitOfWork)
+        public GamesController(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
         // GET: api/Games
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Game>>> GetGame()
+        public async Task<ActionResult<IEnumerable<GameDto>>> GetGame()
         {
             var games = await _unitOfWork.GameRepository.GetAllAsync();
 
@@ -33,12 +37,12 @@ namespace TournamentAPI.Api.Controllers
                 return NotFound();
             }
 
-            return Ok(games);
+            return Ok(_mapper.Map<IEnumerable<GameDto>>(games));
         }
 
         // GET: api/Games/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Game>> GetGame(int id)
+        public async Task<ActionResult<GameDto>> GetGame(int id)
         {
             var game = await _unitOfWork.GameRepository.GetAsync(id);
 
@@ -47,39 +51,32 @@ namespace TournamentAPI.Api.Controllers
                 return NotFound();
             }
 
-            return Ok(game);
+            return Ok(_mapper.Map<GameDto>(game));
         }
 
         // PUT: api/Games/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutGame(int id, Game game)
+        public async Task<IActionResult> PutGame(int id, GameDto gameDto)
         {
-            if (id != game.Id)
-            {
-                return BadRequest();
-            }
 
-            var existingGame = await _unitOfWork.GameRepository.GetAsync(id);
-
-            if (existingGame == null)
+            if (!await GameExists(id))
             {
                 return NotFound();
             }
 
-            existingGame.Title = game.Title;
-            existingGame.Time = game.Time;
-            existingGame.TournamentId = game.TournamentId;
+            var game = _mapper.Map<Game>(gameDto);
+            game.Id = id;
 
             try
             {
-                _unitOfWork.GameRepository.Update(existingGame);
+                _unitOfWork.GameRepository.Update(game);
                 await _unitOfWork.CompleteAsync();
             }
 
             catch (DbUpdateConcurrencyException)
             {
-                if (!await GameExistsAsync(id))
+                if (!await GameExists(id))
                 {
                     return NotFound();
                 }
@@ -95,12 +92,16 @@ namespace TournamentAPI.Api.Controllers
         // POST: api/Games
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Game>> PostGame(Game game)
+        public async Task<ActionResult<GameDto>> PostGame(GameDto gameDto)
         {
+            var game = _mapper.Map<Game>(gameDto);
+
             _unitOfWork.GameRepository.Add(game);
             await _unitOfWork.CompleteAsync();
 
-            return CreatedAtAction("GetGame", new { id = game.Id }, game);
+            var returnGame = _mapper.Map<GameDto>(game);
+
+            return CreatedAtAction("GetGame", new { id = returnGame.Id }, returnGame);
         }
 
         // DELETE: api/Games/5
@@ -120,6 +121,6 @@ namespace TournamentAPI.Api.Controllers
             return NoContent();
         }
 
-        private async Task<bool> GameExistsAsync(int id) => await _unitOfWork.GameRepository.AnyAsync(id);
+        private async Task<bool> GameExists(int id) => await _unitOfWork.GameRepository.AnyAsync(id);
     }
 }

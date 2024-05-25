@@ -61,8 +61,6 @@ namespace TournamentAPI.Api.Controllers
         public async Task<IActionResult> PutTournament(int id, TournamentDto tournamentDto)
         {
 
-            var existingTournament = await _unitOfWork.TournamentRepository.GetAsync(id);
-
             if (!await TournamentExists(id))
             {
                 return NotFound();
@@ -95,14 +93,16 @@ namespace TournamentAPI.Api.Controllers
         // POST: api/Tournaments
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Tournament>> PostTournament(TournamentDto tournamentDto)
+        public async Task<ActionResult<TournamentDto>> PostTournament(TournamentDto tournamentDto)
         {
             var tournament = _mapper.Map<Tournament>(tournamentDto);
 
             _unitOfWork.TournamentRepository.Add(tournament);
             await _unitOfWork.CompleteAsync();
 
-            return CreatedAtAction("GetTournament", new { id = tournament.Id }, tournament);
+            var returnTournament = _mapper.Map<TournamentDto>(tournament);
+
+            return CreatedAtAction("GetTournament", new { id = returnTournament.Id }, returnTournament);
         }
 
         // DELETE: api/Tournaments/5
