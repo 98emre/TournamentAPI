@@ -59,11 +59,20 @@ namespace TournamentAPI.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutGame(int id, GameDto gameDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             if (!await GameExists(id))
             {
                 return NotFound();
             }
+
+            if (!(await TournamentExists(gameDto.TournamentId))) { 
+                return BadRequest($"Tournament with Id {gameDto.TournamentId} not found");
+            }
+
 
             var game = _mapper.Map<Game>(gameDto);
             game.Id = id;
@@ -94,6 +103,16 @@ namespace TournamentAPI.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<GameDto>> PostGame(GameDto gameDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (!(await TournamentExists(gameDto.TournamentId)))
+            {
+                return BadRequest($"Tournament with Id {gameDto.TournamentId} not found");
+            }
+
             var game = _mapper.Map<Game>(gameDto);
 
             _unitOfWork.GameRepository.Add(game);
@@ -122,5 +141,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         private async Task<bool> GameExists(int id) => await _unitOfWork.GameRepository.AnyAsync(id);
+
+        private async Task<bool> TournamentExists(int id) => await _unitOfWork.TournamentRepository.AnyAsync(id);
     }
 }

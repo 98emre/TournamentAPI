@@ -60,10 +60,19 @@ namespace TournamentAPI.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTournament(int id, TournamentDto tournamentDto)
         {
+            if (id <= 0)
+            {
+                return BadRequest();
+            }
 
             if (!await TournamentExists(id))
             {
                 return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
             }
 
             var tournament = _mapper.Map<Tournament>(tournamentDto);
@@ -86,6 +95,10 @@ namespace TournamentAPI.Api.Controllers
                     throw;
                 }
             }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while saving the tournament.");
+            }
 
             return NoContent();
         }
@@ -95,10 +108,22 @@ namespace TournamentAPI.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<TournamentDto>> PostTournament(TournamentDto tournamentDto)
         {
-            var tournament = _mapper.Map<Tournament>(tournamentDto);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-            _unitOfWork.TournamentRepository.Add(tournament);
-            await _unitOfWork.CompleteAsync();
+            var tournament = _mapper.Map<Tournament>(tournamentDto);
+            try
+            {
+                _unitOfWork.TournamentRepository.Add(tournament);
+                await _unitOfWork.CompleteAsync();
+            }
+
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while saving the tournament.");
+            }
 
             var returnTournament = _mapper.Map<TournamentDto>(tournament);
 
@@ -109,6 +134,11 @@ namespace TournamentAPI.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTournament(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest();
+            }
+
             var tournament = await _unitOfWork.TournamentRepository.GetAsync(id);
 
             if (tournament == null)
@@ -116,8 +146,16 @@ namespace TournamentAPI.Api.Controllers
                 return NotFound();
             }
 
-            _unitOfWork.TournamentRepository.Remove(tournament);
-            await _unitOfWork.CompleteAsync();
+            try
+            {
+                _unitOfWork.TournamentRepository.Remove(tournament);
+                await _unitOfWork.CompleteAsync();
+            }
+
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while deleting the tournament.");
+            }
 
             return NoContent();
         }
