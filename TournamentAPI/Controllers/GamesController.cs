@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TournamentAPI.Data.Data;
 using TournamentAPI.Core.Entities;
+using TournamentAPI.Core.Repositories;
 
 namespace TournamentAPI.Api.Controllers
 {
@@ -14,32 +15,39 @@ namespace TournamentAPI.Api.Controllers
     [ApiController]
     public class GamesController : ControllerBase
     {
-        private readonly TournamentAPIContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public GamesController(TournamentAPIContext context)
+        public GamesController(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
         // GET: api/Games
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Game>>> GetGame()
         {
-            return await _context.Game.ToListAsync();
+            var games = await _unitOfWork.GameRepository.GetAllAsync();
+
+            if(games.Count() == 0 || games == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(games);
         }
 
         // GET: api/Games/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Game>> GetGame(int id)
         {
-            var game = await _context.Game.FindAsync(id);
+            var game = await _unitOfWork.GameRepository.GetAsync(id);
 
             if (game == null)
             {
                 return NotFound();
             }
 
-            return game;
+            return Ok(game);
         }
 
         // PUT: api/Games/5
@@ -47,25 +55,31 @@ namespace TournamentAPI.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutGame(int id, Game game)
         {
-            var existGame = await _context.Game.FirstOrDefaultAsync(t => t.Id == id);
+            if (id != game.Id)
+            {
+                return BadRequest();
+            }
 
-            if (existGame == null)
+            var existingGame = await _unitOfWork.GameRepository.GetAsync(id);
+
+            if (existingGame == null)
             {
                 return NotFound();
             }
 
-
-            existGame.Title = game.Title;
-            existGame.Time = game.Time;
-            existGame.TournamentId = game.TournamentId;
+            existingGame.Title = game.Title;
+            existingGame.Time = game.Time;
+            existingGame.TournamentId = game.TournamentId;
 
             try
             {
-                await _context.SaveChangesAsync();
+                _unitOfWork.GameRepository.Update(existingGame);
+                await _unitOfWork.CompleteAsync();
             }
+
             catch (DbUpdateConcurrencyException)
             {
-                if (!GameExists(id))
+                if (!await GameExistsAsync(id))
                 {
                     return NotFound();
                 }
@@ -83,8 +97,8 @@ namespace TournamentAPI.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<Game>> PostGame(Game game)
         {
-            _context.Game.Add(game);
-            await _context.SaveChangesAsync();
+            _unitOfWork.GameRepository.Add(game);
+            await _unitOfWork.CompleteAsync();
 
             return CreatedAtAction("GetGame", new { id = game.Id }, game);
         }
@@ -93,21 +107,19 @@ namespace TournamentAPI.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGame(int id)
         {
-            var game = await _context.Game.FindAsync(id);
+            var game = await _unitOfWork.GameRepository.GetAsync(id);
+
             if (game == null)
             {
                 return NotFound();
             }
 
-            _context.Game.Remove(game);
-            await _context.SaveChangesAsync();
+            _unitOfWork.GameRepository.Remove(game);
+            await _unitOfWork.CompleteAsync();
 
             return NoContent();
         }
 
-        private bool GameExists(int id)
-        {
-            return _context.Game.Any(e => e.Id == id);
-        }
+        private async Task<bool> GameExistsAsync(int id) => await _unitOfWork.GameRepository.AnyAsync(id);
     }
 }

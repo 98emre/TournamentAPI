@@ -62,25 +62,26 @@ namespace TournamentAPI.Api.Controllers
                 return BadRequest();
             }
 
-            var existTournament = await _unitOfWork.TournamentRepository.GetAsync(id);
+            var existingTournament = await _unitOfWork.TournamentRepository.GetAsync(id);
 
-            if (existTournament == null)
+            if (existingTournament == null)
             {
                 return NotFound();
             }
 
-            existTournament.Title = tournament.Title;
-            existTournament.StartDate = tournament.StartDate;
-            existTournament.Games = tournament.Games;
+            existingTournament.Title = tournament.Title;
+            existingTournament.StartDate = tournament.StartDate;
+            existingTournament.Games = tournament.Games;
 
             try
             {
+                _unitOfWork.TournamentRepository.Update(existingTournament);
                 await _unitOfWork.CompleteAsync();
             }
             
             catch (DbUpdateConcurrencyException)
             {
-                if (!TournamentExists(id))
+                if (!await TournamentExistsAsync(id))
                 {
                     return NotFound();
                 }
@@ -121,11 +122,6 @@ namespace TournamentAPI.Api.Controllers
             return NoContent();
         }
 
-        private bool TournamentExists(int id)
-        {
-            var tournament = _unitOfWork.TournamentRepository.AnyAsync(id);
-
-            return (tournament == null) ? false : true;
-        }
+        private async Task<bool> TournamentExistsAsync(int id) => await _unitOfWork.TournamentRepository.AnyAsync(id);
     }
 }
