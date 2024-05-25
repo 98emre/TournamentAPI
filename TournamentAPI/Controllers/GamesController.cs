@@ -44,6 +44,11 @@ namespace TournamentAPI.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<GameDto>> GetGame(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest();
+            }
+
             var game = await _unitOfWork.GameRepository.GetAsync(id);
 
             if (game == null)
@@ -59,6 +64,11 @@ namespace TournamentAPI.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutGame(int id, GameDto gameDto)
         {
+            if (id <= 0)
+            {
+                return BadRequest();
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -95,6 +105,11 @@ namespace TournamentAPI.Api.Controllers
                 }
             }
 
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while updating the game.");
+            }
+
             return NoContent();
         }
 
@@ -115,8 +130,16 @@ namespace TournamentAPI.Api.Controllers
 
             var game = _mapper.Map<Game>(gameDto);
 
-            _unitOfWork.GameRepository.Add(game);
-            await _unitOfWork.CompleteAsync();
+            try
+            {
+                _unitOfWork.GameRepository.Add(game);
+                await _unitOfWork.CompleteAsync();
+            }
+
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while posting the game.");
+            }
 
             var returnGame = _mapper.Map<GameDto>(game);
 
@@ -127,6 +150,11 @@ namespace TournamentAPI.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGame(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest();
+            }
+
             var game = await _unitOfWork.GameRepository.GetAsync(id);
 
             if (game == null)
@@ -134,8 +162,17 @@ namespace TournamentAPI.Api.Controllers
                 return NotFound();
             }
 
-            _unitOfWork.GameRepository.Remove(game);
-            await _unitOfWork.CompleteAsync();
+            try
+            {
+                _unitOfWork.GameRepository.Remove(game);
+                await _unitOfWork.CompleteAsync();
+            }
+
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while deleting the game.");
+
+            }
 
             return NoContent();
         }

@@ -97,7 +97,7 @@ namespace TournamentAPI.Api.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(500, "An error occurred while saving the tournament.");
+                return StatusCode(500, "An error occurred while updating the tournament.");
             }
 
             return NoContent();
@@ -122,7 +122,7 @@ namespace TournamentAPI.Api.Controllers
 
             catch (Exception)
             {
-                return StatusCode(500, "An error occurred while saving the tournament.");
+                return StatusCode(500, "An error occurred while posting the tournament.");
             }
 
             var returnTournament = _mapper.Map<TournamentDto>(tournament);
