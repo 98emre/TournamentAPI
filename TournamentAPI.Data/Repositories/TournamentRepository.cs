@@ -19,18 +19,24 @@ namespace TournamentAPI.Data.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<(IEnumerable<Tournament>, PaginationMetaData)> GetAllAsync(bool includeGames, bool sort, int pageSize, int pageNumber)
+        public async Task<(IEnumerable<Tournament>, PaginationMetaData)> GetAllAsync(bool includeGames, string? filterTitle,  bool sort, int pageSize, int pageNumber)
         {
             var query = _context.Tournament.AsQueryable();
 
+            if (!string.IsNullOrEmpty(filterTitle))
+            {
+                filterTitle = filterTitle.Trim();
+                query = query.Where(q => q.Title == filterTitle);
+            }
+
             if (sort)
             {
-                query = query.OrderBy(c => c.StartDate);
+                query = query.OrderBy(q => q.StartDate);
             }
 
             if (includeGames)
             {
-                query.Include(t => t.Games);
+                query = query.Include(q => q.Games);
             }
 
             var totaltCount = await query.CountAsync();

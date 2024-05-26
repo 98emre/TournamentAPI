@@ -34,12 +34,13 @@ namespace TournamentAPI.Api.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetTournament(
-            [FromQuery] bool includeGames = true, 
+            [FromQuery] bool includeGames = true,
+            [FromQuery] string? filterTitle = null,
             [FromQuery] bool sort = false,
             [FromQuery] int pageSize = 10, 
             [FromQuery] int pageNumber = 1)
         {
-            var (tournaments, paginationMetadata) = await _unitOfWork.TournamentRepository.GetAllAsync(includeGames, sort, pageSize, pageNumber);
+            var (tournaments, paginationMetadata) = await _unitOfWork.TournamentRepository.GetAllAsync(includeGames, filterTitle, sort, pageSize, pageNumber);
 
             if (tournaments == null || !tournaments.Any())
             {

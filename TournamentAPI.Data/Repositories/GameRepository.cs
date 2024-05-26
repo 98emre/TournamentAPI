@@ -21,23 +21,23 @@ namespace TournamentAPI.Data.Repositories
 
         public async Task<(IEnumerable<Game>, PaginationMetaData)> GetAllAsync(string? filterTitle, bool sort, int pageSize, int pageNumber)
         {
-           var collections = _context.Game as IQueryable<Game>;
+           var query = _context.Game as IQueryable<Game>;
 
            if (sort)
            {
-                collections = collections.OrderBy(c => c.Time);
+                query = query.OrderBy(c => c.Time);
            }
 
            if (!string.IsNullOrEmpty(filterTitle))
            {
                 filterTitle = filterTitle.Trim();
-                collections = collections.Where(g => g.Title == filterTitle);
+                query = query.Where(g => g.Title == filterTitle);
            }
 
-            var totaltCount = await collections.CountAsync();
+            var totaltCount = await query.CountAsync();
             var paginationMetaData = new PaginationMetaData(totaltCount, pageSize, pageNumber);
 
-            var collectionToReturn = await collections
+            var collectionToReturn = await query
                 .Skip(pageSize * (pageNumber - 1))
                 .Take(pageSize)
                 .ToListAsync();
