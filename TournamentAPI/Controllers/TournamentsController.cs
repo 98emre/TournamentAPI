@@ -32,7 +32,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTournament(bool includeGames = true, bool sort = false)
+        public async Task<IActionResult> GetTournament([FromQuery] bool includeGames = true, [FromQuery] bool sort = false)
         {
             var tournaments = await _unitOfWork.TournamentRepository.GetAllAsync(includeGames, sort);
 
@@ -45,7 +45,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTournament(int id, bool includeGames = true)
+        public async Task<IActionResult> GetTournament([FromRoute] int id, [FromQuery] bool includeGames = true)
         {
             var tournament = await _unitOfWork.TournamentRepository.GetAsync(id, includeGames);
 
@@ -58,7 +58,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTournament(int id, TournamentPostDto tournamentDto)
+        public async Task<IActionResult> PutTournament([FromRoute] int id, [FromBody] TournamentPostDto tournamentDto)
         {
             if (id <= 0)
             {
@@ -104,7 +104,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<TournamentPostDto>> PostTournament(TournamentPostDto tournamentDto)
+        public async Task<ActionResult<TournamentPostDto>> PostTournament([FromBody] TournamentPostDto tournamentDto)
         {
             if (!ModelState.IsValid)
             {
@@ -130,7 +130,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTournament(int id)
+        public async Task<IActionResult> DeleteTournament([FromRoute] int id)
         {
             if (id <= 0)
             {
@@ -159,7 +159,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpPatch("{tournamentId}")]
-        public async Task<ActionResult<TournamentPostDto>> PatchTournament(int tournamentId, JsonPatchDocument<TournamentPostDto> patchDocument)
+        public async Task<ActionResult<TournamentPostDto>> PatchTournament([FromRoute] int tournamentId, [FromBody] JsonPatchDocument<TournamentPostDto> patchDocument)
         {
             if (tournamentId <= 0)
             {
