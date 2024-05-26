@@ -32,9 +32,9 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTournament(bool includeGames = true)
+        public async Task<IActionResult> GetTournament(bool includeGames = true, bool sort = false)
         {
-            var tournaments = await _unitOfWork.TournamentRepository.GetAllAsync(includeGames);
+            var tournaments = await _unitOfWork.TournamentRepository.GetAllAsync(includeGames, sort);
 
             if (tournaments == null || tournaments.Count() == 0)
             {

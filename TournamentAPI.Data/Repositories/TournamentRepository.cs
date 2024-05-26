@@ -19,11 +19,17 @@ namespace TournamentAPI.Data.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-
-        public async Task<IEnumerable<Tournament>> GetAllAsync(bool includeGames = true)
+        public async Task<IEnumerable<Tournament>> GetAllAsync(bool includeGames = true, bool sort = false)
         {
-            return includeGames ? await _context.Tournament.Include(t => t.Games).ToListAsync() 
-                : await _context.Tournament.ToListAsync();
+            var collections = _context.Tournament as IQueryable<Tournament>;
+
+            if (sort)
+            {
+                collections = collections.OrderBy(c => c.StartDate);
+            }
+
+            return includeGames ? await collections.Include(t => t.Games).ToListAsync()  
+                : await collections.ToListAsync();
         }
 
         public async Task<Tournament> GetAsync(int id, bool includeGames = true)
@@ -31,7 +37,6 @@ namespace TournamentAPI.Data.Repositories
             return includeGames ?  await _context.Tournament.Include(t => t.Games).FirstOrDefaultAsync(t => t.Id == id)
                 : await _context.Tournament.FirstOrDefaultAsync(t => t.Id == id);
         }
-
 
         public void Add(Tournament tournament) => _context.Add(tournament);
 
