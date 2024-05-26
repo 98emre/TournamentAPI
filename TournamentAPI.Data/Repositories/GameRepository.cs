@@ -19,22 +19,30 @@ namespace TournamentAPI.Data.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Game>> GetAllAsync(string? filterTitle, bool sort = false)
+        public async Task<(IEnumerable<Game>, PaginationMetaData)> GetAllAsync(string? filterTitle, bool sort, int pageSize, int pageNumber)
         {
            var collections = _context.Game as IQueryable<Game>;
 
-            if (sort)
-            {
+           if (sort)
+           {
                 collections = collections.OrderBy(c => c.Time);
-            }
+           }
 
-            if (!string.IsNullOrEmpty(filterTitle))
-            {
+           if (!string.IsNullOrEmpty(filterTitle))
+           {
                 filterTitle = filterTitle.Trim();
                 collections = collections.Where(g => g.Title == filterTitle);
-            }
+           }
 
-            return await collections.ToListAsync();
+            var totaltCount = await collections.CountAsync();
+            var paginationMetaData = new PaginationMetaData(totaltCount, pageSize, pageNumber);
+
+            var collectionToReturn = await collections
+                .Skip(pageSize * (pageNumber - 1))
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (collectionToReturn, paginationMetaData);
         }
 
         public async Task<Game> GetAsync(int id) => await _context.Game.FirstOrDefaultAsync(g => g.Id == id);

@@ -21,6 +21,7 @@ namespace TournamentAPI.Api.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        const int maxPageSize = 20;
 
         public GamesController(IUnitOfWork unitOfWork, IMapper mapper)
         {
@@ -29,14 +30,26 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GameDto>>> GetGame([FromQuery] string? filterTitle = null, [FromQuery] bool sort = false)
+        public async Task<ActionResult<IEnumerable<GameDto>>> GetGame(
+            [FromQuery] string? filterTitle = null, 
+            [FromQuery] bool sort = false, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] int pageNumber = 1)
         {
-            var games = await _unitOfWork.GameRepository.GetAllAsync(filterTitle, sort);
+            if (pageSize > maxPageSize)
+            {
+                pageSize = maxPageSize;
+            }
+            
+            var (games, paginationMetadata) = await _unitOfWork.GameRepository.GetAllAsync(filterTitle, sort, pageSize, pageNumber);
+
 
             if (!games.Any() || games == null)
             {
                 return NotFound();
             }
+
+            Response.Headers.Append("X-Pagination", Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadata));
 
             return Ok(_mapper.Map<IEnumerable<GameDto>>(games));
         }
