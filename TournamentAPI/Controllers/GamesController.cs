@@ -29,11 +29,11 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GameDto>>> GetGame(string? filterTitle = null, bool sort = false)
+        public async Task<ActionResult<IEnumerable<GameDto>>> GetGame([FromQuery] string? filterTitle = null, [FromQuery] bool sort = false)
         {
             var games = await _unitOfWork.GameRepository.GetAllAsync(filterTitle, sort);
 
-            if(!games.Any() || games == null)
+            if (!games.Any() || games == null)
             {
                 return NotFound();
             }
@@ -42,7 +42,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<GameDto>> GetGame(int id)
+        public async Task<ActionResult<GameDto>> GetGame([FromRoute] int id)
         {
             if (id <= 0)
             {
@@ -60,7 +60,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutGame(int id, GamePostDto gameDto)
+        public async Task<IActionResult> PutGame([FromRoute] int id, [FromBody] GamePostDto gameDto)
         {
             if (id <= 0)
             {
@@ -77,7 +77,7 @@ namespace TournamentAPI.Api.Controllers
                 return NotFound();
             }
 
-            if (!(await TournamentExists(gameDto.TournamentId))) { 
+            if (!(await TournamentExists(gameDto.TournamentId))) {
                 return BadRequest($"Tournament with Id {gameDto.TournamentId} not found");
             }
 
@@ -111,7 +111,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<GameDto>> PostGame(GamePostDto gameDto)
+        public async Task<ActionResult<GameDto>> PostGame([FromBody] GamePostDto gameDto)
         {
             if (!ModelState.IsValid)
             {
@@ -142,7 +142,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteGame(int id)
+        public async Task<IActionResult> DeleteGame([FromRoute] int id)
         {
             if (id <= 0)
             {
@@ -172,7 +172,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpPatch("{gameId}")]
-        public async Task<IActionResult> PatchGame(int gameId, JsonPatchDocument<GamePostDto> patchDocument)
+        public async Task<IActionResult> PatchGame([FromRoute] int gameId, [FromBody] JsonPatchDocument<GamePostDto> patchDocument)
         {
             if(gameId <= 0)
             {
