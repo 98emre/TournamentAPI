@@ -29,9 +29,9 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GameDto>>> GetGame()
+        public async Task<ActionResult<IEnumerable<GameDto>>> GetGame(string? filterTitle = null)
         {
-            var games = await _unitOfWork.GameRepository.GetAllAsync();
+            var games = await _unitOfWork.GameRepository.GetAllAsync(filterTitle);
 
             if(games.Count() == 0 || games == null)
             {
@@ -186,7 +186,7 @@ namespace TournamentAPI.Api.Controllers
 
             var game = await _unitOfWork.GameRepository.GetAsync(gameId);
 
-            if(game == null)
+            if (game == null)
             {
                 return NotFound();
             }
