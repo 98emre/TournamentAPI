@@ -24,6 +24,7 @@ namespace TournamentAPI.Api.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private int maxPageSize = 20;
 
         public TournamentsController(IUnitOfWork unitOfWork, IMapper mapper)
         {
@@ -32,14 +33,20 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTournament([FromQuery] bool includeGames = true, [FromQuery] bool sort = false)
+        public async Task<IActionResult> GetTournament(
+            [FromQuery] bool includeGames = true, 
+            [FromQuery] bool sort = false,
+            [FromQuery] int pageSize = 10, 
+            [FromQuery] int pageNumber = 1)
         {
-            var tournaments = await _unitOfWork.TournamentRepository.GetAllAsync(includeGames, sort);
+            var (tournaments, paginationMetadata) = await _unitOfWork.TournamentRepository.GetAllAsync(includeGames, sort, pageSize, pageNumber);
 
             if (tournaments == null || !tournaments.Any())
             {
                 return NotFound();
             }
+
+            Response.Headers.Append("X-Pagination", Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadata));
 
             return Ok(includeGames ? _mapper.Map<IEnumerable<TournamentDto>>(tournaments) : _mapper.Map<IEnumerable<TournamentWithoutGamesDto>>(tournaments));
         }

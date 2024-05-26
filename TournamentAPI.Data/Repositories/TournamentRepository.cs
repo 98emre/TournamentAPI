@@ -19,20 +19,32 @@ namespace TournamentAPI.Data.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<IEnumerable<Tournament>> GetAllAsync(bool includeGames = true, bool sort = false)
+        public async Task<(IEnumerable<Tournament>, PaginationMetaData)> GetAllAsync(bool includeGames, bool sort, int pageSize, int pageNumber)
         {
-            var collections = _context.Tournament as IQueryable<Tournament>;
+            var query = _context.Tournament.AsQueryable();
 
             if (sort)
             {
-                collections = collections.OrderBy(c => c.StartDate);
+                query = query.OrderBy(c => c.StartDate);
             }
 
-            return includeGames ? await collections.Include(t => t.Games).ToListAsync()  
-                : await collections.ToListAsync();
+            if (includeGames)
+            {
+                query.Include(t => t.Games);
+            }
+
+            var totaltCount = await query.CountAsync();
+            var paginationMetaData = new PaginationMetaData(totaltCount, pageSize, pageNumber);
+
+            var collectionToReturn = await query
+                .Skip(pageSize * (pageNumber -1))
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (collectionToReturn, paginationMetaData);
         }
 
-        public async Task<Tournament> GetAsync(int id, bool includeGames = true)
+        public async Task<Tournament> GetAsync(int id, bool includeGames)
         {
             return includeGames ?  await _context.Tournament.Include(t => t.Games).FirstOrDefaultAsync(t => t.Id == id)
                 : await _context.Tournament.FirstOrDefaultAsync(t => t.Id == id);
