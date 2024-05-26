@@ -36,7 +36,7 @@ namespace TournamentAPI.Api.Controllers
         {
             var tournaments = await _unitOfWork.TournamentRepository.GetAllAsync(includeGames, sort);
 
-            if (tournaments == null || tournaments.Count() == 0)
+            if (tournaments == null || !tournaments.Any())
             {
                 return NotFound();
             }

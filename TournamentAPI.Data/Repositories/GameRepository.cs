@@ -19,11 +19,14 @@ namespace TournamentAPI.Data.Repositories
             _context = context;
         }
 
-
-
-        public async Task<IEnumerable<Game>> GetAllAsync(string? filterTitle)
+        public async Task<IEnumerable<Game>> GetAllAsync(string? filterTitle, bool sort = false)
         {
            var collections = _context.Game as IQueryable<Game>;
+
+            if (sort)
+            {
+                collections = collections.OrderBy(c => c.Time);
+            }
 
             if (!string.IsNullOrEmpty(filterTitle))
             {
