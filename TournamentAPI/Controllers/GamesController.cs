@@ -9,9 +9,9 @@ using TournamentAPI.Data.Data;
 using TournamentAPI.Core.Entities;
 using TournamentAPI.Core.Repositories;
 using AutoMapper;
-using TournamentAPI.Core.Dto;
 using Azure;
 using Microsoft.AspNetCore.JsonPatch;
+using TournamentAPI.Core.Dto.GameDtos;
 
 namespace TournamentAPI.Api.Controllers
 {
@@ -28,7 +28,6 @@ namespace TournamentAPI.Api.Controllers
             _mapper = mapper;
         }
 
-        // GET: api/Games
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GameDto>>> GetGame()
         {
@@ -42,7 +41,6 @@ namespace TournamentAPI.Api.Controllers
             return Ok(_mapper.Map<IEnumerable<GameDto>>(games));
         }
 
-        // GET: api/Games/5
         [HttpGet("{id}")]
         public async Task<ActionResult<GameDto>> GetGame(int id)
         {
@@ -62,7 +60,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutGame(int id, GameDto gameDto)
+        public async Task<IActionResult> PutGame(int id, GamePostDto gameDto)
         {
             if (id <= 0)
             {
@@ -82,7 +80,6 @@ namespace TournamentAPI.Api.Controllers
             if (!(await TournamentExists(gameDto.TournamentId))) { 
                 return BadRequest($"Tournament with Id {gameDto.TournamentId} not found");
             }
-
 
             var game = _mapper.Map<Game>(gameDto);
             game.Id = id;
@@ -114,7 +111,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<GameDto>> PostGame(GameDto gameDto)
+        public async Task<ActionResult<GameDto>> PostGame(GamePostDto gameDto)
         {
             if (!ModelState.IsValid)
             {
@@ -175,7 +172,7 @@ namespace TournamentAPI.Api.Controllers
         }
 
         [HttpPatch("{gameId}")]
-        public async Task<IActionResult> PatchGame(int gameId, JsonPatchDocument<GameDto> patchDocument)
+        public async Task<IActionResult> PatchGame(int gameId, JsonPatchDocument<GamePostDto> patchDocument)
         {
             if(gameId <= 0)
             {
@@ -194,7 +191,7 @@ namespace TournamentAPI.Api.Controllers
                 return NotFound();
             }
 
-            var gameToPatch = _mapper.Map<GameDto>(game);
+            var gameToPatch = _mapper.Map<GamePostDto>(game);
             patchDocument.ApplyTo(gameToPatch);
 
             if (!ModelState.IsValid)
